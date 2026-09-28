@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6c4cf5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ale Study English">
+<title>Ale Study English in Australia</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Encabezado: logo, nivel y racha -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="logo">🦘 Ale Study English<small>in Australia</small></span>
+      <button class="pill" id="levelBtn" title="Cambiar nivel"></button>
+      <button class="pill" id="streakBtn" title="Mi progreso"></button>
+    </div>
+  </header>
+
+  <!-- Aquí se dibuja la sección actual -->
+  <main id="view"></main>
+
+  <!-- Menú de abajo -->
+  <nav class="bottomnav" id="bottomnav"></nav>
+  <div class="toast" id="toast"></div>
+
+  <!-- 1) Datos (frases, verbos, gramática, conversaciones) -->
+  <script src="js/data/phrases.js"></script>
+  <script src="js/data/verbs.js"></script>
+  <script src="js/data/grammar.js"></script>
+  <script src="js/data/speaking.js"></script>
+  <!-- 2) Núcleo: progreso, audio, micrófono, corrector y ejercicios -->
+  <script src="js/core.js"></script>
+  <script src="js/checker.js"></script>
+  <script src="js/quiz.js"></script>
+  <!-- 3) Secciones -->
+  <script src="js/sections/home.js"></script>
+  <script src="js/sections/phrases.js"></script>
+  <script src="js/sections/verbs.js"></script>
+  <script src="js/sections/practice.js"></script>
+  <script src="js/sections/listening.js"></script>
+  <script src="js/sections/speaking.js"></script>
+  <script src="js/sections/conversation.js"></script>
+  <script src="js/sections/grammar.js"></script>
+  <script src="js/sections/progress.js"></script>
+  <script src="js/sections/tutor.js"></script>
+  <!-- 4) Arranque -->
+  <script src="js/main.js"></script>
+</body>
+</html>
