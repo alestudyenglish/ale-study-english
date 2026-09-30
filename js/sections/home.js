@@ -53,6 +53,7 @@ App.sections.home = {
         ${tile("listening", "👂", "Listening", "Escucha y responde")}
         ${tile("speaking", "🎤", "Speaking", "Habla y te corrijo")}
         ${tile("conversation", "💬", "Conversación", "Diálogos completos")}
+        ${tile("games", "🎲", "Juegos de clase", "Do/Go/Play, preguntas y más")}
         ${tile("progress", "📊", "Mi progreso", "Tus logros")}
       </div>`;
   },

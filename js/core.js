@@ -161,21 +161,31 @@ const Voice = {
   english() { return this.list.filter((v) => /^en[-_]/i.test(v.lang)); },
   // Nombres de voces masculinas conocidas (Edge, Chrome, Windows, iPhone)
   MALE: /\b(guy|andrew|brian|christopher|eric|davis|roger|steffan|ryan|william|liam|thomas|connor|mitchell|david|mark|george|james|daniel|alex|aaron|fred|tom|jorge|raul|raúl|alvaro|álvaro|gonzalo|lorenzo|cristian|tomas|tomás|diego|emilio|pablo|juan|male)\b/i,
+  // Puntaje de "naturalidad" de una voz: más alto = más clara y humana
+  score(v, lang = "en-US", male = false) {
+    const n = v.name.toLowerCase(), l = v.lang.replace("_", "-");
+    let s = male && this.MALE.test(v.name) ? 60 : 0;
+    if (l === lang) s += 50;
+    else if (l === "en-US") s += 30;
+    else if (l === "en-GB" || l === "en-AU") s += 20;
+    if (n.includes("natural")) s += 40;
+    if (n.includes("google")) s += 35;
+    if (n.includes("online")) s += 5;
+    if (!male && /samantha|aria|jenny|ava|allison|karen|catherine|natasha|zira/.test(n)) s += 8;
+    if (/compact|eloquence|espeak|novelty|bad news|bells|whisper|zarvox|trinoids|albert/.test(n)) s -= 60;
+    return s;
+  },
+  // Voces en inglés ordenadas de más natural a menos (para el selector)
+  ranked() {
+    return this.english().sort((a, b) => this.score(b) - this.score(a));
+  },
   best(lang = "en-US", { male = false } = {}) {
-    const score = (v) => {
-      const n = v.name.toLowerCase(), l = v.lang.replace("_", "-");
-      let s = male && this.MALE.test(v.name) ? 60 : 0;
-      if (l === lang) s += 50;
-      else if (l === "en-US") s += 30;
-      else if (l === "en-GB" || l === "en-AU") s += 20;
-      if (n.includes("natural")) s += 40;
-      if (n.includes("google")) s += 35;
-      if (n.includes("online")) s += 5;
-      if (!male && /samantha|aria|jenny|ava|allison|karen|catherine|natasha|zira/.test(n)) s += 8;
-      if (/compact|eloquence|espeak|novelty|bad news|bells|whisper|zarvox|trinoids|albert/.test(n)) s -= 60;
-      return s;
-    };
-    return this.english().sort((a, b) => score(b) - score(a))[0] || null;
+    // Si elegiste una voz en 🎯 Nivel → Voz, se usa esa (salvo para Alexis y las frases de Australia)
+    if (!male && lang === "en-US" && Store.data.voiceName) {
+      const chosen = this.english().find((v) => v.name === Store.data.voiceName);
+      if (chosen) return chosen;
+    }
+    return this.english().sort((a, b) => this.score(b, lang, male) - this.score(a, lang, male))[0] || null;
   },
   // Mejor voz en español (prefiere Latinoamérica y voces "Natural")
   bestSpanish({ male = false } = {}) {

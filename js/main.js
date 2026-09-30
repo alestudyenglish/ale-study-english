@@ -10,7 +10,7 @@ const NAV = [
   ["progress", "📊", "Progreso"],
 ];
 // Secciones que "pertenecen" a la pestaña Practicar
-const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor"];
+const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor", "games"];
 
 function render() {
   if (App.cleanup) { App.cleanup(); App.cleanup = null; }
@@ -54,7 +54,15 @@ function openLevelSheet() {
       <label class="row"><input type="checkbox" id="slowVoice" ${Store.data.slowVoice ? "checked" : ""}> 🐢 Voz más lenta en toda la app</label>
       <div style="margin-top:10px">${voiceInfoHtml()}</div>
     </div>`);
-  $("#testVoice", sheet).onclick = () => speak("Hi! How's it going? This is how I sound.");
+  const sample = "Hi! I go walking on the beach after work. How about you?";
+  $("#testVoice", sheet).onclick = () => speak(sample);
+  const picker = $("#voicePick", sheet);
+  if (picker) picker.onchange = () => {
+    Store.data.voiceName = picker.value || null; // vacío = elegir automáticamente
+    Store.save();
+    speak(sample);
+    toast(picker.value ? "🔊 Voz guardada" : "🔊 Voz automática");
+  };
   $$("[data-level]", sheet).forEach((b) => (b.onclick = () => {
     const l = b.dataset.level;
     if (!Store.data.unlocked.includes(l) && !confirm(`El nivel ${l} aún está bloqueado. ¿Quieres abrirlo igual?`)) return;
@@ -69,7 +77,19 @@ function openLevelSheet() {
 function voiceInfoHtml() {
   Voice.refresh();
   const v = Voice.best();
-  if (v) return `🔊 Voz: <b>${escapeHtml(v.name)}</b> <button class="icon-btn" id="testVoice" style="margin-left:6px">▶️ Probar</button>`;
+  if (v) {
+    const voices = Voice.ranked();
+    const natural = voices.some((x) => /natural|google/i.test(x.name));
+    return `<b>🔊 Voz en inglés</b>
+      <div class="row" style="margin-top:6px">
+        <select id="voicePick" class="search" style="padding:10px;font-size:0.9rem">
+          <option value="">✨ Automática (la más natural): ${escapeHtml(voices[0].name)}</option>
+          ${voices.map((x) => `<option value="${escapeHtml(x.name)}" ${Store.data.voiceName === x.name ? "selected" : ""}>${/natural|google/i.test(x.name) ? "⭐ " : ""}${escapeHtml(x.name)}</option>`).join("")}
+        </select>
+        <button class="icon-btn" id="testVoice">▶️</button>
+      </div>
+      <div class="muted" style="margin-top:6px">Las voces con ⭐ suenan más humanas.${natural ? "" : " 💡 Para voces más naturales, abre la app en <b>Microsoft Edge</b>."}</div>`;
+  }
   return `<button class="icon-btn" id="testVoice" hidden></button>
     ⚠️ <b>Tu navegador no tiene una voz en inglés</b>, por eso el audio puede sonar con acento español o no sonar.<br>
     Soluciones:<br>
@@ -90,6 +110,10 @@ updateHeader();
 render();
 
 // 📱 Preparado para instalar como app en el celular (solo funciona desde un servidor, no con doble clic)
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+// En el computador (localhost) no se usa, para que siempre veas los cambios al instante.
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+if ("serviceWorker" in navigator && location.protocol === "https:" && !isLocal) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
+} else if ("serviceWorker" in navigator && isLocal) {
+  navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
 }

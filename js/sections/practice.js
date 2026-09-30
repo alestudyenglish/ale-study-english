@@ -10,6 +10,7 @@ App.sections.practice = {
       <h1 class="page">🎯 Practicar</h1>
       <p class="lead">Elige cómo quieres practicar hoy.</p>
       ${listItem("tutor", "🗣️", "Hablar con Alexis", "Conversación libre con IA, en inglés y español")}
+      ${listItem("games", "🎲", "Juegos de clase", "Do/Go/Play, preguntas sí/no, ruleta y he/she/it")}
       ${listItem("practice/review", "🔁", "Repaso rápido", "Mezcla de verbos y frases que te cuestan")}
       ${listItem("practice/verbs", "🧠", "Verbos", `Escribe la forma correcta · ${mastered} dominados`)}
       ${listItem("listening", "👂", "Listening", "Escucha y elige o escribe lo que oíste")}

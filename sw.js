@@ -1,6 +1,6 @@
 // 📱 Service worker: guarda la app en el teléfono para que abra rápido y funcione sin internet.
 // Cuando cambies archivos, sube el número de versión para que el celular descargue lo nuevo.
-const CACHE = "everyday-english-v4"; // nombre interno: no cambiarlo, solo subir el número
+const CACHE = "everyday-english-v6"; // nombre interno: no cambiarlo, solo subir el número
 const FILES = [
   "app.html", "manifest.json", "icon.svg", "css/styles.css",
   "js/data/phrases.js", "js/data/verbs.js", "js/data/grammar.js", "js/data/speaking.js",
@@ -8,6 +8,7 @@ const FILES = [
   "js/sections/home.js", "js/sections/phrases.js", "js/sections/verbs.js", "js/sections/practice.js",
   "js/sections/listening.js", "js/sections/speaking.js", "js/sections/conversation.js",
   "js/sections/grammar.js", "js/sections/progress.js", "js/sections/tutor.js",
+  "js/data/games.js", "js/sections/games.js", "index.html",
 ];
 
 self.addEventListener("install", (e) => {
@@ -30,6 +31,7 @@ self.addEventListener("fetch", (e) => {
         caches.open(CACHE).then((c) => c.put(e.request, copy));
         return res;
       })
-      .catch(() => caches.match(e.request))
+      // Sin internet: usa la copia guardada. Si no hay copia, reintenta la descarga una vez
+      .catch(() => caches.match(e.request).then((cached) => cached || fetch(e.request)))
   );
 });
