@@ -136,25 +136,35 @@ const TutorVoice = {
   cache: new Map(),
   stopped: false,
   hasClone() { const k = TutorKeys.get(); return !!(k.elevenKey && k.voiceId); },
-  async elevenAudio(text) {
-    if (this.cache.has(text)) return this.cache.get(text);
+  // ElevenLabs acepta velocidades entre 0.7 y 1.2; si pides más lento, el resto se hace al reproducir
+  elevenSpeed: (rate) => Math.min(1.2, Math.max(0.7, rate)),
+  async elevenAudio(text, rate = 1) {
+    const speed = this.elevenSpeed(rate);
+    const key = `${speed}|${text}`;
+    if (this.cache.has(key)) return this.cache.get(key);
     const { elevenKey, voiceId } = TutorKeys.get();
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "xi-api-key": elevenKey, Accept: "audio/mpeg" },
-      body: JSON.stringify({ text, model_id: ELEVEN_MODEL }),
+      body: JSON.stringify({
+        text, model_id: ELEVEN_MODEL,
+        // stability alta = pronunciación más clara y pareja
+        voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0, use_speaker_boost: true, speed },
+      }),
     });
     if (!res.ok) {
       const msg = res.status === 401 ? "clave de ElevenLabs inválida" : res.status === 404 ? "Voice ID no encontrado" : `error ${res.status}`;
       throw new Error(msg);
     }
     const url = URL.createObjectURL(await res.blob());
-    this.cache.set(text, url);
+    this.cache.set(key, url);
     return url;
   },
-  playUrl(url) {
+  playUrl(url, playbackRate = 1) {
     return new Promise((resolve) => {
       this.audio = new Audio(url);
+      this.audio.playbackRate = playbackRate; // el navegador mantiene el tono de la voz
+      this.audio.preservesPitch = true;
       this.audio.onended = this.audio.onerror = () => resolve();
       this.audio.play().catch(() => resolve());
     });
@@ -163,22 +173,29 @@ const TutorVoice = {
     return new Promise((resolve) => {
       if (!("speechSynthesis" in window)) return resolve();
       Voice.refresh();
-      const u = new SpeechSynthesisUtterance(text);
       const v = lang === "es" ? Voice.bestSpanish({ male: true }) : Voice.best("en-US", { male: true }); // Alexis es hombre
-      u.lang = v ? v.lang : lang === "es" ? "es-MX" : "en-US";
-      if (v) u.voice = v;
-      u.rate = slow ? 0.7 : lang === "es" ? 1 : 0.92;
-      u.onend = u.onerror = () => resolve();
-      speechSynthesis.speak(u);
+      // Frase por frase, con una pequeña pausa entre oraciones
+      const parts = splitSentences(text);
+      parts.forEach((part, n) => {
+        const u = new SpeechSynthesisUtterance(part);
+        u.lang = v ? v.lang : lang === "es" ? "es-MX" : "en-US";
+        if (v) u.voice = v;
+        // El inglés va a la velocidad que elegiste; el español, a velocidad normal
+        u.rate = lang === "es" ? (slow ? 0.85 : 1) : voiceRate(slow);
+        if (n === parts.length - 1) u.onend = u.onerror = () => resolve();
+        speechSynthesis.speak(u);
+      });
+      if (!parts.length) resolve();
     });
   },
   // Lee los segmentos en orden (inglés con voz en inglés, español con voz en español)
   async speakSegments(segments, { slow = false } = {}) {
     this.stop();
     this.stopped = false;
-    const useClone = this.hasClone() && !slow;
+    const useClone = this.hasClone();
+    const rateFor = (s) => (s.lang === "es" ? (slow ? 0.85 : 1) : voiceRate(slow));
     // Pedimos todos los audios a la vez para que no haya pausas entre segmentos
-    const urls = useClone ? segments.map((s) => this.elevenAudio(s.text).catch((e) => e)) : [];
+    const urls = useClone ? segments.map((s) => this.elevenAudio(s.text, rateFor(s)).catch((e) => e)) : [];
     for (let i = 0; i < segments.length; i++) {
       if (this.stopped) return;
       const s = segments[i];
@@ -187,7 +204,7 @@ const TutorVoice = {
         if (url instanceof Error) {
           toast(`🔊 Tu voz no funcionó (${url.message}). Uso la voz del navegador.`);
           await this.browserSay(s.text, s.lang, slow);
-        } else await this.playUrl(url);
+        } else await this.playUrl(url, rateFor(s) / this.elevenSpeed(rateFor(s)));
       } else await this.browserSay(s.text, s.lang, slow);
     }
   },
@@ -307,9 +324,9 @@ App.sections.tutor = {
       out.textContent = "⏳ Generando audio...";
       try {
         TutorVoice.cache.clear();
-        const url = await TutorVoice.elevenAudio("Hi! This is my voice speaking English. Y así sueno en español.");
+        const url = await TutorVoice.elevenAudio("Hi! This is my voice speaking English. Y así sueno en español.", voiceRate());
         out.textContent = "✅ ¡Funciona! Escucha 🔊";
-        TutorVoice.playUrl(url);
+        TutorVoice.playUrl(url, voiceRate() / TutorVoice.elevenSpeed(voiceRate()));
       } catch (e) { out.textContent = "⚠️ " + e.message + " (si dice 'Failed to fetch', revisa tu internet)"; }
     };
   },

@@ -10,7 +10,7 @@ const NAV = [
   ["progress", "📊", "Progreso"],
 ];
 // Secciones que "pertenecen" a la pestaña Practicar
-const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor", "games"];
+const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor", "games", "past"];
 
 function render() {
   if (App.cleanup) { App.cleanup(); App.cleanup = null; }
@@ -34,6 +34,17 @@ function updateHeader() {
   $("#levelBtn").innerHTML = `${LEVEL_INFO[l].emoji} ${l}`;
   const s = streakDays();
   $("#streakBtn").innerHTML = `🔥 ${s}`;
+  $("#speedBtn").innerHTML = `${voiceRate() < 0.85 ? "🐢" : "🔊"} ${rateText()}`;
+}
+const rateText = () => `${Number(voiceRate().toFixed(2))}x`;
+
+// Botón rápido de velocidad: cada toque pasa a la siguiente (0.6 → 0.75 → 0.9 → 1 → 1.1)
+function cycleSpeed() {
+  const now = voiceRate();
+  const next = RATE_STEPS.find((r) => r > now + 0.01) || RATE_STEPS[0];
+  setVoiceRate(next);
+  toast(`${next < 0.85 ? "🐢" : "🔊"} Velocidad ${rateText()} · ${rateName(next)}`);
+  speak("This is my speed now. Is it clear?");
 }
 
 // Ventana para elegir nivel
@@ -51,7 +62,9 @@ function openLevelSheet() {
       </button>`;
     }).join("")}
     <div class="card-box small" style="margin-top:8px">
-      <label class="row"><input type="checkbox" id="slowVoice" ${Store.data.slowVoice ? "checked" : ""}> 🐢 Voz más lenta en toda la app</label>
+      <label for="voiceRate" class="row"><b style="flex:1">🎚️ Velocidad de la voz</b><b id="rateLabel">${rateText()} · ${rateName(voiceRate())}</b></label>
+      <input type="range" id="voiceRate" min="0.5" max="1.2" step="0.05" value="${voiceRate()}" style="width:100%;margin-top:8px;accent-color:var(--accent)">
+      <div class="row muted" style="font-size:0.75rem"><span>🐢 Muy lenta</span><span class="spacer"></span><span>Normal</span><span class="spacer"></span><span>Rápida 🐇</span></div>
       <div style="margin-top:10px">${voiceInfoHtml()}</div>
     </div>`);
   const sample = "Hi! I go walking on the beach after work. How about you?";
@@ -70,7 +83,9 @@ function openLevelSheet() {
     setLevel(l);
     toast(`${LEVEL_INFO[l].emoji} Nivel ${l} · ${LEVEL_INFO[l].name}`);
   }));
-  $("#slowVoice", sheet).onchange = (e) => { Store.data.slowVoice = e.target.checked; Store.save(); };
+  const rate = $("#voiceRate", sheet);
+  rate.oninput = () => { setVoiceRate(Number(rate.value)); $("#rateLabel", sheet).textContent = `${rateText()} · ${rateName(voiceRate())}`; };
+  rate.onchange = () => speak(sample); // al soltar la barra, escuchas cómo suena
 }
 
 // Muestra qué voz se está usando y, si no hay voz en inglés, cómo instalarla
@@ -103,6 +118,7 @@ $("#bottomnav").innerHTML = `<div class="bottomnav-inner">${NAV.map(([r, ico, la
 $$(".navbtn").forEach((b) => (b.onclick = () => go(b.dataset.route)));
 $("#levelBtn").onclick = openLevelSheet;
 $("#streakBtn").onclick = () => go("progress");
+$("#speedBtn").onclick = cycleSpeed;
 $(".logo").onclick = () => go("home");
 window.addEventListener("hashchange", () => { render(); updateHeader(); });
 

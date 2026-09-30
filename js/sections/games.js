@@ -38,10 +38,10 @@ function talkCard(container, p, onNext, { nextLabel = "Siguiente ➡️" } = {})
   }));
 }
 
-function gameTop(title, right = "") {
-  return `<div class="row" style="margin:6px 0 12px"><button class="icon-btn" onclick="go('games')" title="Salir">✕</button><b style="flex:1">${title}</b>${right}</div>`;
+function gameTop(title, right = "", back = "games") {
+  return `<div class="row" style="margin:6px 0 12px"><button class="icon-btn" onclick="go('${back}')" title="Salir">✕</button><b style="flex:1">${title}</b>${right}</div>`;
 }
-function gameEnd(view, { emoji, title, lines, id, score, again, extra = "" }) {
+function gameEnd(view, { emoji, title, lines, id, score, again, extra = "", back = "games", backLabel = "🎲 Juegos" }) {
   const isNew = saveBest(id, score);
   view.innerHTML = `
     <div class="quiz-card" style="text-align:center">
@@ -50,7 +50,7 @@ function gameEnd(view, { emoji, title, lines, id, score, again, extra = "" }) {
       ${lines.map((l) => `<p class="muted" style="margin:6px 0">${l}</p>`).join("")}
       <p><b>${isNew ? "🏆 ¡Nuevo récord!" : `Tu récord: ${gameBest(id)}`}</b></p>
       ${extra}
-      <div class="btn-row"><button class="btn" data-again>🔁 Otra vez</button><button class="btn ghost" onclick="go('games')">🎲 Juegos</button></div>
+      <div class="btn-row"><button class="btn" data-again>🔁 Otra vez</button><button class="btn ghost" onclick="go('${back}')">${backLabel}</button></div>
     </div>`;
   $("[data-again]", view).onclick = again;
 }

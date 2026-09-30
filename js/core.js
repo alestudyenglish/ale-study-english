@@ -54,13 +54,15 @@ const Store = {
       convs: {},       // { cafe: { done, times } }
       stats: { correct: 0, wrong: 0, listenOk: 0, listenTotal: 0, speakTotal: 0, speakPerfect: 0 },
       days: [],        // días en que practicaste
-      slowVoice: false,
+      voiceRate: 0.9,  // velocidad de la voz: 0.5 (muy lenta) a 1.2 (rápida)
     };
   },
   load() {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) {}
     const d = this.defaults();
+    // Antes había solo "voz lenta" (sí/no): la convertimos a la nueva velocidad
+    if (saved.voiceRate === undefined && saved.slowVoice) saved.voiceRate = 0.75;
     this.data = { ...d, ...saved, stats: { ...d.stats, ...(saved.stats || {}) } };
   },
   save() {
@@ -209,21 +211,48 @@ function speak(text, opts = {}) {
     .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}️‍]/gu, "") // sin emojis (la voz los leería)
     .replace(/\.\.\./g, " ").replace(/\s*\/\s*/g, ", ").trim();
   if (!clean) return;
-  const u = new SpeechSynthesisUtterance(clean);
-  u.lang = opts.lang || "en-US";
-  u.rate = opts.slow || Store.data.slowVoice ? 0.7 : 0.92;
-  u.pitch = 1;
-  const voice = Voice.best(u.lang);
-  if (voice) { u.voice = voice; u.lang = voice.lang; }
-  else if (!Voice.warned && Voice.list.length) {
+  const lang = opts.lang || "en-US";
+  const voice = Voice.best(lang);
+  if (!voice && !Voice.warned && Voice.list.length) {
     Voice.warned = true;
     toast("⚠️ No hay voz en inglés instalada. Toca tu nivel (arriba) para ver cómo arreglarlo");
   }
+  // Frase por frase: con una pequeña pausa entre oraciones se entiende mejor
+  const utterances = splitSentences(clean).map((part) => {
+    const u = new SpeechSynthesisUtterance(part);
+    u.lang = voice ? voice.lang : lang;
+    if (voice) u.voice = voice;
+    u.rate = voiceRate(opts.slow);
+    u.pitch = 1;
+    return u;
+  });
   // Chrome a veces se "traba" si se habla justo después de cancelar: esperamos un instante
   const wasBusy = speechSynthesis.speaking || speechSynthesis.pending;
   speechSynthesis.cancel();
-  if (wasBusy) setTimeout(() => speechSynthesis.speak(u), 80);
-  else speechSynthesis.speak(u);
+  const play = () => utterances.forEach((u) => speechSynthesis.speak(u));
+  if (wasBusy) setTimeout(play, 80); else play();
+}
+
+// Velocidad elegida por el usuario (🐢 = 70% de esa velocidad, mínimo 0.5)
+function voiceRate(slow = false) {
+  const r = Number(Store.data.voiceRate) || 0.9;
+  return slow ? Math.max(0.5, Math.round(r * 0.7 * 100) / 100) : r;
+}
+const RATE_STEPS = [0.6, 0.75, 0.9, 1, 1.1];
+const rateName = (r) => (r <= 0.65 ? "muy lenta" : r <= 0.8 ? "lenta" : r <= 0.95 ? "normal" : r <= 1.05 ? "natural" : "rápida");
+function setVoiceRate(r) {
+  Store.data.voiceRate = Math.min(1.2, Math.max(0.5, Math.round(r * 100) / 100));
+  Store.save();
+  if (typeof updateHeader === "function") updateHeader();
+}
+// Separa en oraciones sin romper abreviaturas comunes (Mr., Dr., a.m.)
+function splitSentences(text) {
+  return text.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡"“])/).map((s) => s.trim()).filter(Boolean)
+    .reduce((acc, s) => {
+      if (acc.length && /\b(Mr|Mrs|Ms|Dr|St|a\.m|p\.m)\.$/i.test(acc[acc.length - 1])) acc[acc.length - 1] += " " + s;
+      else acc.push(s);
+      return acc;
+    }, []);
 }
 // Las frases de Australia se leen con acento australiano (si el sistema lo tiene)
 const langFor = (p) => (p && p.category && p.category.includes("Australia") ? "en-AU" : "en-US");
