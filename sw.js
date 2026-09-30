@@ -1,6 +1,6 @@
 // 📱 Service worker: guarda la app en el teléfono para que abra rápido y funcione sin internet.
 // Cuando cambies archivos, sube el número de versión para que el celular descargue lo nuevo.
-const CACHE = "everyday-english-v8"; // nombre interno: no cambiarlo, solo subir el número
+const CACHE = "everyday-english-v9"; // nombre interno: no cambiarlo, solo subir el número
 const FILES = [
   "app.html", "manifest.json", "icon.svg", "css/styles.css",
   "js/data/phrases.js", "js/data/verbs.js", "js/data/grammar.js", "js/data/speaking.js",
@@ -13,7 +13,8 @@ const FILES = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)));
+  // "reload" = descargar del servidor, nunca de una copia vieja del navegador
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: "reload" })))));
   self.skipWaiting();
 });
 self.addEventListener("activate", (e) => {
@@ -25,11 +26,13 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   // Las APIs externas (Claude, ElevenLabs) nunca se guardan en caché
   if (/api\.anthropic\.com|api\.elevenlabs\.io/.test(e.request.url)) return;
+  // Archivos de la app: siempre preguntar al servidor si hay versión nueva ("no-cache")
+  const sameOrigin = new URL(e.request.url).origin === self.location.origin;
+  const fresh = sameOrigin ? fetch(e.request.url, { cache: "no-cache", credentials: "same-origin" }) : fetch(e.request);
   e.respondWith(
-    fetch(e.request)
+    fresh
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
         return res;
       })
       // Sin internet: usa la copia guardada. Si no hay copia, reintenta la descarga una vez

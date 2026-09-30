@@ -129,7 +129,24 @@ render();
 // En el computador (localhost) no se usa, para que siempre veas los cambios al instante.
 const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
 if ("serviceWorker" in navigator && location.protocol === "https:" && !isLocal) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  // updateViaCache "none": el teléfono siempre revisa si hay un sw.js nuevo
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+    .then((reg) => {
+      reg.update();
+      // Al volver a abrir la app (desde segundo plano), revisar si hay actualización
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update(); });
+    })
+    .catch(() => {});
+  // Cuando llega una versión nueva, recargar una vez para mostrarla
+  // (la primera vez que se instala no hace falta recargar)
+  let reloaded = false;
+  const hadVersion = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloaded || !hadVersion) return;
+    reloaded = true;
+    toast("✨ App actualizada");
+    setTimeout(() => location.reload(), 600);
+  });
 } else if ("serviceWorker" in navigator && isLocal) {
   navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
 }
