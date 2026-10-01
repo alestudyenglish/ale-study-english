@@ -37,7 +37,7 @@ function runQuiz(container, questions, { title = "Práctica", onFinish, back = "
     const progress = Math.round((Math.min(index, total) / total) * 100);
     container.innerHTML = `
       <div class="quiz-top">
-        <button class="icon-btn" data-quit title="Salir">✕</button>
+        <button class="icon-btn" data-quit title="${tx("Salir", "خروج")}">✕</button>
         <div class="bar"><div style="width:${progress}%"></div></div>
         <b class="q-score">⭐ ${score}</b>
       </div>
@@ -68,8 +68,8 @@ function runQuiz(container, questions, { title = "Práctica", onFinish, back = "
     } else {
       body.innerHTML = `
         <form>
-          <input class="answer-input" type="text" placeholder="Escribe tu respuesta..." autocomplete="off" autocapitalize="off" spellcheck="false">
-          <button class="btn block" type="submit">Comprobar</button>
+          <input class="answer-input" type="text" dir="ltr" placeholder="${tx("Escribe tu respuesta...", "اكتب إجابتك...")}" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="btn block" type="submit">${tx("Comprobar", "تحقّق")}</button>
         </form>`;
       const input = $("input", body);
       setTimeout(() => input.focus(), 50);
@@ -84,7 +84,7 @@ function runQuiz(container, questions, { title = "Práctica", onFinish, back = "
           answered(q, r.ok, null, r.html);
         } else {
           const ok = isCorrect(q, value);
-          answered(q, ok, q.answers[0], !ok && almost(q, value) ? "😅 ¡Casi! Revisa la ortografía." : "");
+          answered(q, ok, q.answers[0], !ok && almost(q, value) ? tx("😅 ¡Casi! Revisa la ortografía.", "😅 قريب! راجع الإملاء.") : "");
         }
       };
     }
@@ -101,13 +101,13 @@ function runQuiz(container, questions, { title = "Práctica", onFinish, back = "
 
     $(".q-feedback", container).innerHTML = `
       <div class="feedback ${ok ? "ok" : "no"}">
-        <div class="fb-title">${ok ? pick(["✅ Correct!", "🔥 Nice!", "🎯 ¡Exacto!", "💪 ¡Bien hecho!"]) : "❌ Incorrect"}</div>
-        ${!ok && correct ? `<div>La respuesta correcta es: <b>${escapeHtml(correct)}</b></div>` : ""}
+        <div class="fb-title">${ok ? pick(["✅ Correct!", "🔥 Nice!", tx("🎯 ¡Exacto!", "🎯 بالضبط!"), tx("💪 ¡Bien hecho!", "💪 أحسنت!")]) : "❌ Incorrect"}</div>
+        ${!ok && correct ? `<div>${tx("La respuesta correcta es:", "الإجابة الصحيحة:")} <b dir="ltr">${escapeHtml(correct)}</b></div>` : ""}
         ${extraHtml ? `<div style="margin-top:6px">${extraHtml}</div>` : ""}
         ${q.explain ? `<div class="small" style="margin-top:6px">💡 ${q.explain}</div>` : ""}
-        ${q.say ? `<div class="row" style="margin-top:8px">${sayBtn(q.say, "🔊 Escuchar")} <span class="small">${escapeHtml(q.say)}</span></div>` : ""}
+        ${q.say ? `<div class="row" style="margin-top:8px">${sayBtn(q.say, tx("🔊 Escuchar", "🔊 استمع"))} <span class="small" dir="ltr">${escapeHtml(q.say)}</span></div>` : ""}
       </div>
-      <button class="btn block" data-next>${index + 1 < queue.length ? "Siguiente ➡️" : "Ver resultado 🏁"}</button>`;
+      <button class="btn block" data-next>${index + 1 < queue.length ? tx("Siguiente ➡️", "التالي ⬅️") : tx("Ver resultado 🏁", "عرض النتيجة 🏁")}</button>`;
     if (q.say && ok) speak(q.say);
     const next = $("[data-next]", container);
     next.focus();
@@ -116,15 +116,15 @@ function runQuiz(container, questions, { title = "Práctica", onFinish, back = "
 
   function finish() {
     const pct = Math.round((firstTry / total) * 100);
-    const [emoji, msg] = pct === 100 ? ["🏆", "¡Perfecto! Legend!"] : pct >= 80 ? ["😎", "¡Casi nativo!"] : pct >= 60 ? ["💪", "¡Vas muy bien!"] : ["🔥", "Buen calentamiento, ¡otra vez!"];
+    const [emoji, msg] = pct === 100 ? ["🏆", tx("¡Perfecto! Legend!", "ممتاز! أسطورة!")] : pct >= 80 ? ["😎", tx("¡Casi nativo!", "كأنك من أهل اللغة!")] : pct >= 60 ? ["💪", tx("¡Vas muy bien!", "أنت تتقدّم جيدًا!")] : ["🔥", tx("Buen calentamiento, ¡otra vez!", "إحماء جيد، مرة أخرى!")];
     container.innerHTML = `
       <div class="quiz-card" style="text-align:center">
         <div class="result-big">${emoji}</div>
         <h2 style="margin:0">${msg}</h2>
-        <p class="muted">${title}: <b>${firstTry} de ${total}</b> correctas al primer intento (${pct}%)</p>
+        <p class="muted">${title}: ${tx(`<b>${firstTry} de ${total}</b> correctas al primer intento (${pct}%)`, `<b>${firstTry} من ${total}</b> صحيحة من المحاولة الأولى (${pct}%)`)}</p>
         <div class="btn-row">
-          <button class="btn" data-again>🔁 Otra vez</button>
-          <button class="btn ghost" data-back>⬅️ Volver</button>
+          <button class="btn" data-again>${tx("🔁 Otra vez", "🔁 مرة أخرى")}</button>
+          <button class="btn ghost" data-back>${tx("⬅️ Volver", "➡️ رجوع")}</button>
         </div>
       </div>`;
     $("[data-back]", container).onclick = () => go(back);
@@ -146,11 +146,11 @@ function levenshtein(a, b) {
 
 // ---------- Preguntas de verbos (se usan en Verbos y en Repaso) ----------
 const TENSES = {
-  pres: { label: "🟢 Presente", color: "var(--pres)" },
-  past: { label: "🔴 Pasado", color: "var(--past)" },
-  pp: { label: "🟣 Participio", color: "var(--pp)" },
-  fut: { label: "🔵 Futuro", color: "var(--fut)" },
-  ger: { label: "🟠 Gerundio", color: "var(--ger)" },
+  pres: { label: tx("🟢 Presente", "🟢 المضارع"), color: "var(--pres)" },
+  past: { label: tx("🔴 Pasado", "🔴 الماضي"), color: "var(--past)" },
+  pp: { label: tx("🟣 Participio", "🟣 التصريف الثالث"), color: "var(--pp)" },
+  fut: { label: tx("🔵 Futuro", "🔵 المستقبل"), color: "var(--fut)" },
+  ger: { label: tx("🟠 Gerundio", "🟠 صيغة -ing"), color: "var(--ger)" },
 };
 const esMain = (v) => v.es.split(" / ")[0];
 
@@ -168,7 +168,7 @@ function verbQuestion(v, tense) {
     return {
       ...base,
       prompt: escapeHtml(ex.en).replace(/\*.+?\*/, blank),
-      sub: `🇪🇸 ${escapeHtml(ex.es)}<br>${hint}`,
+      sub: `${NATIVE.flag} ${escapeHtml(ex.es)}<br>${hint}`,
       answers: [answer],
       say: ex.en.replace(/\*/g, ""),
       explain: explainForm(v, tense),
@@ -188,11 +188,11 @@ function verbQuestion(v, tense) {
 
 function explainForm(v, tense) {
   switch (tense) {
-    case "pres": return v.base === "be" ? "I am · you are · he/she/it is" : `Con he / she / it se agrega -s: ${v.base} → <b>${v.third}</b>.`;
-    case "past": return v.irregular ? `Pasado irregular: ${v.base} → <b>${v.past}</b>. ¡Hay que memorizarlo! 🔥` : `Regular: ${v.base} + ed → <b>${v.past}</b>.`;
-    case "pp": return v.irregular ? `Participio irregular: ${v.base} → <b>${v.participle}</b> (se usa con have).` : `Regular: el participio es igual al pasado → <b>${v.participle}</b>.`;
-    case "fut": return `Futuro = <b>will</b> + verbo normal → will ${v.base}.`;
-    case "ger": return `Gerundio = verbo + ing → <b>${v.ing}</b>.`;
+    case "pres": return v.base === "be" ? "I am · you are · he/she/it is" : tx(`Con he / she / it se agrega -s: ${v.base} → <b>${v.third}</b>.`, `مع he / she / it نضيف -s: ${v.base} → <b>${v.third}</b>.`);
+    case "past": return v.irregular ? tx(`Pasado irregular: ${v.base} → <b>${v.past}</b>. ¡Hay que memorizarlo! 🔥`, `ماضٍ شاذ: ${v.base} → <b>${v.past}</b>. يجب حفظه! 🔥`) : tx(`Regular: ${v.base} + ed → <b>${v.past}</b>.`, `منتظم: ${v.base} + ed → <b>${v.past}</b>.`);
+    case "pp": return v.irregular ? tx(`Participio irregular: ${v.base} → <b>${v.participle}</b> (se usa con have).`, `تصريف ثالث شاذ: ${v.base} → <b>${v.participle}</b> (يُستخدم مع have).`) : tx(`Regular: el participio es igual al pasado → <b>${v.participle}</b>.`, `منتظم: التصريف الثالث مثل الماضي → <b>${v.participle}</b>.`);
+    case "fut": return tx(`Futuro = <b>will</b> + verbo normal → will ${v.base}.`, `المستقبل = <b>will</b> + الفعل العادي → will ${v.base}.`);
+    case "ger": return tx(`Gerundio = verbo + ing → <b>${v.ing}</b>.`, `صيغة -ing = الفعل + ing → <b>${v.ing}</b>.`);
   }
 }
 

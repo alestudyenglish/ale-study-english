@@ -37,17 +37,17 @@ const Checker = (() => {
   // ---- Reglas de frase completa: [patrón, corrección, explicación] ----
   const PHRASE_RULES = [
     [/\b(i|you|he|she|we|they)\s+(?:have|has)\s+(\d+)\s+years(?:\s+old)?\b/gi,
-      (m, s, n) => `${s} ${beFor(s)} ${n} years old`, "La edad se dice con <b>be</b> (am/is/are), no con have."],
+      (m, s, n) => `${s} ${beFor(s)} ${n} years old`, tx("La edad se dice con <b>be</b> (am/is/are), no con have.", "العمر يُقال باستخدام <b>be</b> (am/is/are)، وليس have.")],
     [/\b(i|you|he|she|we|they)(?:\s+am|'m|\s+is|'s|\s+are|'re)\s+agree\b/gi,
-      (m, s) => `${s} ${THIRD.includes(s.toLowerCase()) ? "agrees" : "agree"}`, "<b>Agree</b> ya es un verbo: se dice <i>I agree</i>, sin am/is/are."],
+      (m, s) => `${s} ${THIRD.includes(s.toLowerCase()) ? "agrees" : "agree"}`, tx("<b>Agree</b> ya es un verbo: se dice <i>I agree</i>, sin am/is/are.", "<b>Agree</b> فعل بحد ذاته: نقول <i>I agree</i> بدون am/is/are.")],
     [/\b(will|can|could|should|must|would)\s+to\s+(?=[a-z])/gi,
-      (m, mod) => `${mod} `, "Después de <b>will, can, should...</b> no va <i>to</i>."],
+      (m, mod) => `${mod} `, tx("Después de <b>will, can, should...</b> no va <i>to</i>.", "بعد <b>will, can, should...</b> لا نستخدم <i>to</i>.")],
     [/\bmore\s+(better|worse|bigger|smaller|cheaper|faster|taller|older|younger|easier|harder)\b/gi,
-      (m, w) => w, "Esa palabra ya significa «más...». No uses <b>more</b>."],
+      (m, w) => w, tx("Esa palabra ya significa «más...». No uses <b>more</b>.", "هذه الكلمة تعني «أكثر...» بالفعل. لا تستخدم <b>more</b>.")],
     [/\b(he|she|it)\s+don't\b/gi,
-      (m, s) => `${s} doesn't`, "Con he / she / it se usa <b>doesn't</b>."],
+      (m, s) => `${s} doesn't`, tx("Con he / she / it se usa <b>doesn't</b>.", "مع he / she / it نستخدم <b>doesn't</b>.")],
     [/\ba\s+(?!uni|use|usu|eu|one|once)([aeiou][a-z]*)/gi,
-      (m, w) => `an ${w}`, "Antes de sonido de vocal se usa <b>an</b>."],
+      (m, w) => `an ${w}`, tx("Antes de sonido de vocal se usa <b>an</b>.", "قبل صوت حرف علّة نستخدم <b>an</b>.")],
   ];
 
   function check(text, { tense } = {}) {
@@ -90,23 +90,23 @@ const Checker = (() => {
 
       // did / didn't + pasado → forma normal
       if ((p === "did" || p === "didn't" || (p === "not" && pp === "did") || (question && pp === "did")) && f.form === "past" && v.past !== v.base) {
-        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, `Después de <b>did / didn't</b> el verbo va en forma normal: ${wd.lw} → <b>${v.base}</b>.`);
+        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, tx(`Después de <b>did / didn't</b> el verbo va en forma normal: ${wd.lw} → <b>${v.base}</b>.`, `بعد <b>did / didn't</b> يأتي الفعل في شكله العادي: ${wd.lw} → <b>${v.base}</b>.`));
         return setWord(k, v.base);
       }
       // will / can / should + forma incorrecta → forma normal
       if (["will", "won't", "can", "can't", "should"].includes(p) && ["past", "third", "ing"].includes(f.form) && wd.lw !== v.base) {
-        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, `Después de <b>${p}</b> el verbo va en forma normal: <b>${v.base}</b>.`);
+        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, tx(`Después de <b>${p}</b> el verbo va en forma normal: <b>${v.base}</b>.`, `بعد <b>${p}</b> يأتي الفعل في شكله العادي: <b>${v.base}</b>.`));
         return setWord(k, v.base);
       }
       // doesn't likes → doesn't like
       if ((p === "doesn't" || p === "does") && f.form === "third" && v.third !== v.base) {
-        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, "Después de <b>doesn't / does</b> el verbo va sin -s.");
+        add(`${prevW} ${wd.w}`, `${prevW} ${v.base}`, tx("Después de <b>doesn't / does</b> el verbo va sin -s.", "بعد <b>doesn't / does</b> يأتي الفعل بدون -s."));
         return setWord(k, v.base);
       }
       // I going → I am going
       if (f.form === "ing" && SUBJECTS.includes(p)) {
         const be = beFor(p);
-        add(`${prevW} ${wd.w}`, `${prevW} ${be} ${wd.w}`, "Con -ing necesitas <b>am / is / are</b> antes.");
+        add(`${prevW} ${wd.w}`, `${prevW} ${be} ${wd.w}`, tx("Con -ing necesitas <b>am / is / are</b> antes.", "مع -ing تحتاج إلى <b>am / is / are</b> قبله."));
         parts[words[k - 1].i] = prevW + " " + be;
         return;
       }
@@ -120,20 +120,22 @@ const Checker = (() => {
         if (v.base === "be") {
           const right = ["you", "we", "they"].includes(p) ? "were" : "was";
           if (["am", "is", "are"].includes(wd.lw)) {
-            add(`${prevW} ${wd.w}`, `${prevW} ${right}`, `Hablamos del pasado${pastWord ? ` (<i>${pastWord}</i>)` : ""}: am/is → <b>was</b>, are → <b>were</b>.`);
+            add(`${prevW} ${wd.w}`, `${prevW} ${right}`, tx(`Hablamos del pasado${pastWord ? ` (<i>${pastWord}</i>)` : ""}: am/is → <b>was</b>, are → <b>were</b>.`, `نتحدّث عن الماضي${pastWord ? ` (<i>${pastWord}</i>)` : ""}: am/is → <b>was</b>، are → <b>were</b>.`));
             setWord(k, right);
           }
           return;
         }
         if (v.past === v.base) return; // put, cut, read... se escriben igual
         const right = v.past.split(" / ")[0];
-        add(`${prevW} ${wd.w}`, `${prevW} ${right}`, `<b>${v.base} → ${right}</b> porque hablamos del pasado${pastWord ? ` (<i>${pastWord}</i>)` : ""}. ${v.irregular ? "Es irregular: ¡hay que memorizarlo! 🔥" : "Es regular: se agrega -ed."}`);
+        add(`${prevW} ${wd.w}`, `${prevW} ${right}`, tx(
+          `<b>${v.base} → ${right}</b> porque hablamos del pasado${pastWord ? ` (<i>${pastWord}</i>)` : ""}. ${v.irregular ? "Es irregular: ¡hay que memorizarlo! 🔥" : "Es regular: se agrega -ed."}`,
+          `<b>${v.base} → ${right}</b> لأننا نتحدّث عن الماضي${pastWord ? ` (<i>${pastWord}</i>)` : ""}. ${v.irregular ? "فعل شاذ: يجب حفظه! 🔥" : "فعل منتظم: نضيف -ed."}`));
         return setWord(k, right);
       }
 
       // Presente con he / she / it: She like → likes
       if (!past && THIRD.includes(p) && f.form === "base" && v.third !== v.base && v.base !== "be") {
-        add(`${prevW} ${wd.w}`, `${prevW} ${v.third}`, `Con <b>he / she / it</b> en presente el verbo lleva <b>-s</b>: ${v.base} → ${v.third}.`);
+        add(`${prevW} ${wd.w}`, `${prevW} ${v.third}`, tx(`Con <b>he / she / it</b> en presente el verbo lleva <b>-s</b>: ${v.base} → ${v.third}.`, `مع <b>he / she / it</b> في المضارع يأخذ الفعل <b>-s</b>: ${v.base} → ${v.third}.`));
         return setWord(k, v.third);
       }
     });
@@ -153,17 +155,17 @@ const Checker = (() => {
 // Muestra el resultado del corrector de forma visual
 function correctionHtml(said, result) {
   if (!result.issues.length) {
-    return `<div class="feedback ok"><div class="fb-title">✅ ¡No encontré errores!</div><div>“${escapeHtml(said)}”</div></div>`;
+    return `<div class="feedback ok"><div class="fb-title">${tx("✅ ¡No encontré errores!", "✅ لم أجد أخطاء!")}</div><div dir="ltr">“${escapeHtml(said)}”</div></div>`;
   }
   return `
     <div class="feedback no">
-      <div class="fb-title">✏️ Vamos a mejorarlo</div>
-      <div>❌ <s>${escapeHtml(said)}</s></div>
-      <div style="margin-top:6px">✅ <b>${escapeHtml(result.corrected)}</b> ${sayBtn(result.corrected)}</div>
+      <div class="fb-title">${tx("✏️ Vamos a mejorarlo", "✏️ لنحسّنها")}</div>
+      <div dir="ltr">❌ <s>${escapeHtml(said)}</s></div>
+      <div style="margin-top:6px" dir="ltr">✅ <b>${escapeHtml(result.corrected)}</b> ${sayBtn(result.corrected)}</div>
     </div>
     ${result.issues.map((i) => `
       <div class="issue">
-        <span class="wrong">❌ ${escapeHtml(i.wrong)}</span> → <span class="right">✅ ${escapeHtml(i.right)}</span>
+        <span dir="ltr"><span class="wrong">❌ ${escapeHtml(i.wrong)}</span> → <span class="right">✅ ${escapeHtml(i.right)}</span></span>
         <div class="why">💡 ${i.why}</div>
       </div>`).join("")}`;
 }

@@ -17,9 +17,11 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 // Quita tildes, mayúsculas y signos para comparar respuestas
+// (en árabe también quita los signos vocálicos y unifica las formas de alif)
 function normalize(s) {
   return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[’‘`]/g, "'").replace(/[.,!?¿¡;:"“”()]/g, " ").replace(/\s+/g, " ").trim();
+    .replace(/[ً-ٰٕـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+    .replace(/[’‘`]/g, "'").replace(/[.,!?¿¡;:"“”()؟،؛]/g, " ").replace(/\s+/g, " ").trim();
 }
 function shuffle(arr) {
   const a = [...arr];
@@ -55,6 +57,7 @@ const Store = {
       stats: { correct: 0, wrong: 0, listenOk: 0, listenTotal: 0, speakTotal: 0, speakPerfect: 0 },
       days: [],        // días en que practicaste
       voiceRate: 0.9,  // velocidad de la voz: 0.5 (muy lenta) a 1.2 (rápida)
+      lang: "es",      // idioma de ayuda: "es" (español) o "ar" (árabe)
     };
   },
   load() {
@@ -114,10 +117,10 @@ function streakDays() {
 // ---------- 3. Niveles ----------
 const LEVELS = ["A1", "A2", "B1", "B2"];
 const LEVEL_INFO = {
-  A1: { name: "Básico", emoji: "🌱" },
-  A2: { name: "Elemental", emoji: "🌿" },
-  B1: { name: "Intermedio", emoji: "🌳" },
-  B2: { name: "Intermedio alto", emoji: "🏔️" },
+  A1: { name: tx("Básico", "مبتدئ"), emoji: "🌱" },
+  A2: { name: tx("Elemental", "أساسي"), emoji: "🌿" },
+  B1: { name: tx("Intermedio", "متوسط"), emoji: "🌳" },
+  B2: { name: tx("Intermedio alto", "فوق المتوسط"), emoji: "🏔️" },
 };
 const UNLOCK_AT = 0.5; // con 50% del nivel completado se abre el siguiente
 const levelIdx = (l) => LEVELS.indexOf(l);
@@ -140,7 +143,7 @@ function checkUnlocks() {
     if (next && Store.data.unlocked.includes(lvl) && !Store.data.unlocked.includes(next) && levelProgress(lvl) >= UNLOCK_AT) {
       Store.data.unlocked.push(next);
       Store.save();
-      toast(`🎉 ¡Desbloqueaste el nivel ${next}!`);
+      toast(tx(`🎉 ¡Desbloqueaste el nivel ${next}!`, `🎉 فتحت المستوى ${next}!`));
     }
   });
 }
@@ -162,7 +165,7 @@ const Voice = {
   refresh() { if ("speechSynthesis" in window) this.list = speechSynthesis.getVoices(); },
   english() { return this.list.filter((v) => /^en[-_]/i.test(v.lang)); },
   // Nombres de voces masculinas conocidas (Edge, Chrome, Windows, iPhone)
-  MALE: /\b(guy|andrew|brian|christopher|eric|davis|roger|steffan|ryan|william|liam|thomas|connor|mitchell|david|mark|george|james|daniel|alex|aaron|fred|tom|jorge|raul|raúl|alvaro|álvaro|gonzalo|lorenzo|cristian|tomas|tomás|diego|emilio|pablo|juan|male)\b/i,
+  MALE: /\b(guy|andrew|brian|christopher|eric|davis|roger|steffan|ryan|william|liam|thomas|connor|mitchell|david|mark|george|james|daniel|alex|aaron|fred|tom|jorge|raul|raúl|alvaro|álvaro|gonzalo|lorenzo|cristian|tomas|tomás|diego|emilio|pablo|juan|hamed|shakir|taim|moaz|omar|bassel|jamal|hamdan|laith|rami|saleh|fahed|hedi|ali|naayf|male)\b/i,
   // Puntaje de "naturalidad" de una voz: más alto = más clara y humana
   score(v, lang = "en-US", male = false) {
     const n = v.name.toLowerCase(), l = v.lang.replace("_", "-");
@@ -189,15 +192,18 @@ const Voice = {
     }
     return this.english().sort((a, b) => this.score(b, lang, male) - this.score(a, lang, male))[0] || null;
   },
-  // Mejor voz en español (prefiere Latinoamérica y voces "Natural")
-  bestSpanish({ male = false } = {}) {
-    const es = this.list.filter((v) => /^es[-_]/i.test(v.lang));
+  // Mejor voz en el idioma de ayuda (español: prefiere Latinoamérica; árabe: Arabia Saudita/Emiratos)
+  bestNative({ male = false } = {}) {
+    const prefix = new RegExp(`^${NATIVE.code}[-_]`, "i");
+    const preferred = isAr ? ["ar-SA", "ar-AE", "ar-EG"] : ["es-MX", "es-US", "es-CO", "es-CL", "es-419"];
+    const list = this.list.filter((v) => prefix.test(v.lang));
     const score = (v) => {
       const n = v.name.toLowerCase(), l = v.lang.replace("_", "-");
-      return (male && this.MALE.test(v.name) ? 60 : 0) + (/natural/.test(n) ? 40 : 0) + (/google/.test(n) ? 30 : 0) + (["es-MX", "es-US", "es-CO", "es-CL", "es-419"].includes(l) ? 20 : 0);
+      return (male && this.MALE.test(v.name) ? 60 : 0) + (/natural/.test(n) ? 40 : 0) + (/google/.test(n) ? 30 : 0) + (preferred.includes(l) ? 20 : 0);
     };
-    return es.sort((a, b) => score(b) - score(a))[0] || null;
+    return list.sort((a, b) => score(b) - score(a))[0] || null;
   },
+  bestSpanish(opts) { return this.bestNative(opts); },
 };
 if ("speechSynthesis" in window) {
   Voice.refresh();
@@ -205,7 +211,7 @@ if ("speechSynthesis" in window) {
 }
 
 function speak(text, opts = {}) {
-  if (!("speechSynthesis" in window)) { toast("Tu navegador no puede leer en voz alta 😢"); return; }
+  if (!("speechSynthesis" in window)) { toast(tx("Tu navegador no puede leer en voz alta 😢", "متصفحك لا يستطيع القراءة بصوت عالٍ 😢")); return; }
   if (!Voice.list.length) Voice.refresh();
   const clean = String(text)
     .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}️‍]/gu, "") // sin emojis (la voz los leería)
@@ -215,7 +221,7 @@ function speak(text, opts = {}) {
   const voice = Voice.best(lang);
   if (!voice && !Voice.warned && Voice.list.length) {
     Voice.warned = true;
-    toast("⚠️ No hay voz en inglés instalada. Toca tu nivel (arriba) para ver cómo arreglarlo");
+    toast(tx("⚠️ No hay voz en inglés instalada. Toca tu nivel (arriba) para ver cómo arreglarlo", "⚠️ لا يوجد صوت إنجليزي مثبت. اضغط على مستواك (في الأعلى) لمعرفة الحل"));
   }
   // Frase por frase: con una pequeña pausa entre oraciones se entiende mejor
   const utterances = splitSentences(clean).map((part) => {
@@ -239,7 +245,7 @@ function voiceRate(slow = false) {
   return slow ? Math.max(0.5, Math.round(r * 0.7 * 100) / 100) : r;
 }
 const RATE_STEPS = [0.6, 0.75, 0.9, 1, 1.1];
-const rateName = (r) => (r <= 0.65 ? "muy lenta" : r <= 0.8 ? "lenta" : r <= 0.95 ? "normal" : r <= 1.05 ? "natural" : "rápida");
+const rateName = (r) => (r <= 0.65 ? tx("muy lenta", "بطيئة جدًا") : r <= 0.8 ? tx("lenta", "بطيئة") : r <= 0.95 ? tx("normal", "عادية") : r <= 1.05 ? tx("natural", "طبيعية") : tx("rápida", "سريعة"));
 function setVoiceRate(r) {
   Store.data.voiceRate = Math.min(1.2, Math.max(0.5, Math.round(r * 100) / 100));
   Store.save();
@@ -255,7 +261,7 @@ function splitSentences(text) {
     }, []);
 }
 // Las frases de Australia se leen con acento australiano (si el sistema lo tiene)
-const langFor = (p) => (p && p.category && p.category.includes("Australia") ? "en-AU" : "en-US");
+const langFor = (p) => (p && (p.isAu || (p.category && p.category.includes("Australia"))) ? "en-AU" : "en-US");
 
 // ---------- 4b. Hablar: reconocimiento de voz ----------
 // Funciona en Chrome y Edge (computador y Android) y Safari. Necesita internet
@@ -267,31 +273,32 @@ function stopListening() {
   if (activeRec) { try { activeRec.abort(); } catch (e) {} activeRec = null; }
 }
 const MIC_ERRORS = {
-  "not-allowed": "🔒 El micrófono está bloqueado. Dale permiso en el navegador. Si abriste la app con doble clic, usa <b>iniciar.bat</b>.",
-  "service-not-allowed": "🔒 El navegador no permite usar el micrófono aquí. Abre la app con <b>iniciar.bat</b>.",
-  "no-speech": "🤔 No te escuché. Toca el micrófono y habla de nuevo.",
-  "audio-capture": "🎙️ No encontré un micrófono conectado.",
-  network: "📶 El reconocimiento de voz necesita internet.",
+  "not-allowed": tx("🔒 El micrófono está bloqueado. Dale permiso en el navegador. Si abriste la app con doble clic, usa <b>iniciar.bat</b>.", "🔒 الميكروفون محظور. اسمح به في المتصفح. إذا فتحت التطبيق بنقرة مزدوجة، استخدم <b>iniciar.bat</b>."),
+  "service-not-allowed": tx("🔒 El navegador no permite usar el micrófono aquí. Abre la app con <b>iniciar.bat</b>.", "🔒 المتصفح لا يسمح باستخدام الميكروفون هنا. افتح التطبيق باستخدام <b>iniciar.bat</b>."),
+  "no-speech": tx("🤔 No te escuché. Toca el micrófono y habla de nuevo.", "🤔 لم أسمعك. اضغط على الميكروفون وتكلّم مرة أخرى."),
+  "audio-capture": tx("🎙️ No encontré un micrófono conectado.", "🎙️ لم أجد ميكروفونًا متصلًا."),
+  network: tx("📶 El reconocimiento de voz necesita internet.", "📶 التعرّف على الصوت يحتاج إلى الإنترنت."),
 };
+const MIC_HINT = tx("Toca el micrófono y habla en inglés", "اضغط على الميكروفون وتكلّم بالإنجليزية");
 
 // Crea el bloque: botón grande de micrófono + texto escuchado + campo para escribir
-function micWidget(onFinal, { placeholder = "O escribe tu respuesta aquí..." } = {}) {
+function micWidget(onFinal, { placeholder = tx("O escribe tu respuesta aquí...", "أو اكتب إجابتك هنا...") } = {}) {
   const el = html(`
     <div class="mic-wrap">
-      <button class="mic" type="button" title="Hablar">🎤</button>
+      <button class="mic" type="button" title="${tx("Hablar", "تكلّم")}">🎤</button>
       <div class="mic-status"></div>
-      <div class="transcript"></div>
+      <div class="transcript" dir="ltr"></div>
       <form class="type-row">
-        <input type="text" placeholder="${escapeHtml(placeholder)}" autocomplete="off" autocapitalize="off">
+        <input type="text" dir="auto" placeholder="${escapeHtml(placeholder)}" autocomplete="off" autocapitalize="off">
         <button class="btn" type="submit">➤</button>
       </form>
     </div>`);
   const btn = $(".mic", el), status = $(".mic-status", el), tr = $(".transcript", el);
   if (!SpeechRec) {
     btn.disabled = true; btn.style.opacity = 0.4;
-    status.innerHTML = "Tu navegador no reconoce voz. Usa <b>Chrome</b> o <b>Edge</b>. Mientras, puedes escribir 👇";
+    status.innerHTML = tx("Tu navegador no reconoce voz. Usa <b>Chrome</b> o <b>Edge</b>. Mientras, puedes escribir 👇", "متصفحك لا يتعرّف على الصوت. استخدم <b>Chrome</b> أو <b>Edge</b>. يمكنك الكتابة في الأثناء 👇");
   } else {
-    status.textContent = "Toca el micrófono y habla en inglés";
+    status.textContent = MIC_HINT;
   }
   btn.onclick = () => {
     if (activeRec) { activeRec.stop(); return; }
@@ -304,16 +311,16 @@ function micWidget(onFinal, { placeholder = "O escribe tu respuesta aquí..." } 
       tr.textContent = `“${text}”`;
       if (e.results[e.results.length - 1].isFinal) finalText = text;
     };
-    rec.onerror = (e) => { status.innerHTML = MIC_ERRORS[e.error] || "Algo falló con el micrófono 😅 (" + e.error + ")"; };
+    rec.onerror = (e) => { status.innerHTML = MIC_ERRORS[e.error] || tx("Algo falló con el micrófono 😅 (", "حدث خطأ في الميكروفون 😅 (") + e.error + ")"; };
     rec.onend = () => {
       btn.classList.remove("on"); activeRec = null;
-      if (finalText.trim()) { status.textContent = "Esto entendí 👆"; onFinal(finalText.trim()); }
-      else if (!status.innerHTML.includes("🔒") && !status.innerHTML.includes("📶")) status.textContent = "Toca el micrófono y habla en inglés";
+      if (finalText.trim()) { status.textContent = tx("Esto entendí 👆", "هذا ما فهمته 👆"); onFinal(finalText.trim()); }
+      else if (!status.innerHTML.includes("🔒") && !status.innerHTML.includes("📶")) status.textContent = MIC_HINT;
     };
     stopListening();
     activeRec = rec;
-    btn.classList.add("on"); status.textContent = "🔴 Escuchando... habla ahora"; tr.textContent = "";
-    try { rec.start(); } catch (e) { status.textContent = "No pude iniciar el micrófono 😅"; }
+    btn.classList.add("on"); status.textContent = tx("🔴 Escuchando... habla ahora", "🔴 أستمع... تكلّم الآن"); tr.textContent = "";
+    try { rec.start(); } catch (e) { status.textContent = tx("No pude iniciar el micrófono 😅", "لم أستطع تشغيل الميكروفون 😅"); }
   };
   $("form", el).onsubmit = (e) => {
     e.preventDefault();
@@ -352,7 +359,7 @@ document.addEventListener("click", (e) => {
   speak(b.dataset.say, { lang: b.dataset.lang, slow: b.dataset.slow === "1" });
 });
 const sayBtn = (text, label = "🔊", extra = "") =>
-  `<button class="icon-btn" type="button" data-say="${escapeHtml(text)}" ${extra} title="Escuchar">${label}</button>`;
+  `<button class="icon-btn" type="button" data-say="${escapeHtml(text)}" ${extra} title="${tx("Escuchar", "استمع")}">${label}</button>`;
 
 // Compara palabra por palabra lo que dijiste/escribiste con la frase correcta
 function wordDiff(target, said) {
@@ -382,13 +389,13 @@ function wordDiff(target, said) {
 // Ventana para practicar la pronunciación de una frase
 function pronounceSheet(text, lang = "en-US") {
   const sheet = openSheet(`
-    <h2>🎤 Dilo tú</h2>
-    <div class="card-box"><div class="big" style="font-size:1.3rem">${escapeHtml(text)}</div>
-      <div class="btn-row" style="margin-top:12px">${sayBtn(text, "🔊 Escuchar", `data-lang="${lang}"`)}${sayBtn(text, "🐢 Lento", `data-lang="${lang}" data-slow="1"`)}</div>
+    <h2>🎤 ${tx("Dilo tú", "قلها أنت")}</h2>
+    <div class="card-box"><div class="big" dir="ltr" style="font-size:1.3rem">${escapeHtml(text)}</div>
+      <div class="btn-row" style="margin-top:12px">${sayBtn(text, tx("🔊 Escuchar", "🔊 استمع"), `data-lang="${lang}"`)}${sayBtn(text, tx("🐢 Lento", "🐢 ببطء"), `data-lang="${lang}" data-slow="1"`)}</div>
     </div>
     <div class="mic-slot"></div>
     <div class="result"></div>
-    <button class="btn ghost block" style="margin-top:10px">Cerrar</button>`);
+    <button class="btn ghost block" style="margin-top:10px">${tx("Cerrar", "إغلاق")}</button>`);
   $(".btn.ghost", sheet).onclick = closeSheet;
   $(".mic-slot", sheet).appendChild(micWidget((said) => {
     const d = wordDiff(text, said);
@@ -398,9 +405,9 @@ function pronounceSheet(text, lang = "en-US") {
     markDay(); Store.save();
     $(".result", sheet).innerHTML = `
       <div class="feedback ${ok ? "ok" : "no"}">
-        <div class="fb-title">${pct >= 95 ? "🔥 ¡Perfecto!" : ok ? "✅ ¡Muy bien!" : "💪 ¡Casi! Inténtalo otra vez"} (${pct}%)</div>
-        <div>${d.html}</div>
-        <div class="small muted" style="margin-top:6px">🟢 palabras que entendí · 🔴 palabras que faltaron o sonaron distinto</div>
+        <div class="fb-title">${pct >= 95 ? tx("🔥 ¡Perfecto!", "🔥 ممتاز!") : ok ? tx("✅ ¡Muy bien!", "✅ جيد جدًا!") : tx("💪 ¡Casi! Inténtalo otra vez", "💪 قريب! حاول مرة أخرى")} (${pct}%)</div>
+        <div dir="ltr">${d.html}</div>
+        <div class="small muted" style="margin-top:6px">${tx("🟢 palabras que entendí · 🔴 palabras que faltaron o sonaron distinto", "🟢 كلمات فهمتها · 🔴 كلمات ناقصة أو نُطقت بشكل مختلف")}</div>
       </div>`;
-  }, { placeholder: "O escríbela para practicar..." }));
+  }, { placeholder: tx("O escríbela para practicar...", "أو اكتبها للتدرّب...") }));
 }

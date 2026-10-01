@@ -4,11 +4,11 @@ App.sections.grammar = {
     if (id && mode === "practice") return this.practice(view, id);
     if (id) return this.lesson(view, id);
     view.innerHTML = `
-      <h1 class="page">📖 Gramática</h1>
-      <p class="lead">Explicada fácil: primero en español, después ejemplos y al final ejercicios.</p>
+      <h1 class="page">📖 ${tx("Gramática", "القواعد")}</h1>
+      <p class="lead">${tx("Explicada fácil: primero en español, después ejemplos y al final ejercicios.", "شرح سهل: أولًا بالعربية، ثم أمثلة، وفي النهاية تمارين.")}</p>
       ${levelGroups(GRAMMAR, (g) => {
         const st = Store.data.grammar[g.id];
-        const sub = st ? `${g.es} · mejor: ${st.best}%${st.done ? " ✅" : ""}` : g.es;
+        const sub = st ? `${g.es} · ${tx("mejor", "الأفضل")}: ${st.best}%${st.done ? " ✅" : ""}` : g.es;
         return listItem(allowed(g) ? "grammar/" + g.id : "", g.emoji, g.title, sub, !allowed(g));
       })}`;
     lockedClicks(view);
@@ -17,32 +17,33 @@ App.sections.grammar = {
   lesson(view, id) {
     const g = GRAMMAR.find((x) => x.id === id);
     if (!g) return go("grammar");
-    const formula = (row) => `<div class="formula">${row.map((x) => (["+", ","].includes(x) ? `<i>${x}</i>` : `<span>${escapeHtml(x)}</span>`)).join("")}</div>`;
+    // La estructura siempre va de izquierda a derecha, como en inglés
+    const formula = (row) => `<div class="formula" dir="ltr">${row.map((x) => (["+", ","].includes(x) ? `<i>${x}</i>` : `<span>${escapeHtml(x)}</span>`)).join("")}</div>`;
     view.innerHTML = `
-      <button class="btn ghost" onclick="go('grammar')" style="margin:6px 0 12px">⬅️ Lecciones</button>
-      <h1 class="page">${g.emoji} ${g.title}</h1>
+      <button class="btn ghost" onclick="go('grammar')" style="margin:6px 0 12px">${tx("⬅️ Lecciones", "➡️ الدروس")}</button>
+      <h1 class="page">${g.emoji} <span dir="ltr">${g.title}</span></h1>
       <p class="lead">${g.es} · <span class="tag level">${g.level}</span></p>
 
       <div class="card-box">
-        <div class="section-title" style="margin-top:0">📌 ¿Para qué se usa?</div>
+        <div class="section-title" style="margin-top:0">📌 ${tx("¿Para qué se usa?", "متى نستخدمه؟")}</div>
         <ul class="explain">${g.use.map((u) => `<li>${u}</li>`).join("")}</ul>
       </div>
 
       <div class="card-box">
-        <div class="section-title" style="margin-top:0">🧩 Estructura</div>
+        <div class="section-title" style="margin-top:0">🧩 ${tx("Estructura", "البنية")}</div>
         ${g.formula.map(formula).join("")}
       </div>
 
-      <div class="section-title">💬 Ejemplos</div>
+      <div class="section-title">💬 ${tx("Ejemplos", "أمثلة")}</div>
       ${g.examples.map(([en, es]) => `
         <div class="ex" style="--c:var(--accent)">
-          <div class="text"><div class="en">${escapeHtml(en)}</div><div class="es">${escapeHtml(es)}</div></div>
+          <div class="text"><div class="en" dir="ltr">${escapeHtml(en)}</div><div class="es">${escapeHtml(es)}</div></div>
           <div class="btns">${sayBtn(en.replace("→", ","))}</div>
         </div>`).join("")}
 
-      ${g.tips ? `<div class="card-box" style="background:var(--warn-soft)"><b>⚠️ Ojo</b><ul class="explain">${g.tips.map((t) => `<li>${t}</li>`).join("")}</ul></div>` : ""}
+      ${g.tips ? `<div class="card-box" style="background:var(--warn-soft)"><b>⚠️ ${tx("Ojo", "انتبه")}</b><ul class="explain">${g.tips.map((t) => `<li>${t}</li>`).join("")}</ul></div>` : ""}
 
-      <button class="btn block" onclick="go('grammar/${g.id}/practice')">✍️ Hacer ejercicios (${g.exercises.length})</button>`;
+      <button class="btn block" onclick="go('grammar/${g.id}/practice')">✍️ ${tx(`Hacer ejercicios (${g.exercises.length})`, `حلّ التمارين (${g.exercises.length})`)}</button>`;
   },
 
   practice(view, id) {

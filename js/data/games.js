@@ -149,9 +149,9 @@ const HSI_ITEMS = [
 
 // Explicación de la regla según cómo termina el verbo
 function hsiRule(v) {
-  if (v === "have") return "Irregular: have → <b>has</b> (nunca «haves»).";
-  if (v === "go" || v === "do") return `Termina en -o → se agrega <b>-es</b>: ${v} → ${v}es.`;
-  if (/(s|sh|ch|x|z)$/.test(v)) return `Termina en s, sh, ch o x → se agrega <b>-es</b>: ${v} → ${v}es.`;
-  if (/[^aeiou]y$/.test(v)) return `Consonante + y → cambia a <b>-ies</b>: ${v} → ${v.slice(0, -1)}ies.`;
-  return `Regla general: se agrega <b>-s</b>: ${v} → ${v}s.`;
+  if (v === "have") return tx("Irregular: have → <b>has</b> (nunca «haves»).", "شاذ: have → <b>has</b> (وليس «haves» أبدًا).");
+  if (v === "go" || v === "do") return tx(`Termina en -o → se agrega <b>-es</b>: ${v} → ${v}es.`, `ينتهي بـ -o → نضيف <b>-es</b>: ${v} → ${v}es.`);
+  if (/(s|sh|ch|x|z)$/.test(v)) return tx(`Termina en s, sh, ch o x → se agrega <b>-es</b>: ${v} → ${v}es.`, `ينتهي بـ s أو sh أو ch أو x → نضيف <b>-es</b>: ${v} → ${v}es.`);
+  if (/[^aeiou]y$/.test(v)) return tx(`Consonante + y → cambia a <b>-ies</b>: ${v} → ${v.slice(0, -1)}ies.`, `حرف ساكن + y → تتحوّل إلى <b>-ies</b>: ${v} → ${v.slice(0, -1)}ies.`);
+  return tx(`Regla general: se agrega <b>-s</b>: ${v} → ${v}s.`, `القاعدة العامة: نضيف <b>-s</b>: ${v} → ${v}s.`);
 }

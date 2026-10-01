@@ -3,8 +3,8 @@ App.sections.conversation = {
   render(view, id) {
     if (id) return this.chat(view, id);
     view.innerHTML = `
-      <h1 class="page">💬 Conversación</h1>
-      <p class="lead">Conversaciones reales. Responde hablando 🎤 o escribiendo ⌨️ y la conversación sigue según tu respuesta.</p>
+      <h1 class="page">💬 ${tx("Conversación", "محادثة")}</h1>
+      <p class="lead">${tx("Conversaciones reales. Responde hablando 🎤 o escribiendo ⌨️ y la conversación sigue según tu respuesta.", "محادثات حقيقية. أجب بالكلام 🎤 أو بالكتابة ⌨️ وتستمر المحادثة حسب إجابتك.")}</p>
       ${levelGroups(CONVERSATIONS, (c) => {
         const done = Store.data.convs[c.id]?.done;
         return listItem(allowed(c) ? "conversation/" + c.id : "", c.emoji, c.title + (done ? " ✅" : ""), c.desc, !allowed(c));
@@ -23,15 +23,15 @@ App.sections.conversation = {
       <div class="row" style="margin:6px 0">
         <button class="icon-btn" onclick="go('conversation')">✕</button>
         <b style="flex:1">${conv.emoji} ${conv.title}</b>
-        <button class="icon-btn" id="voiceToggle" title="Leer en voz alta">🔊</button>
-        <button class="icon-btn" id="esToggle" title="Mostrar traducción">🇪🇸</button>
+        <button class="icon-btn" id="voiceToggle" title="${tx("Leer en voz alta", "القراءة بصوت عالٍ")}">🔊</button>
+        <button class="icon-btn" id="esToggle" title="${tx("Mostrar traducción", "إظهار الترجمة")}">${NATIVE.flag}</button>
       </div>
       <div class="chat" id="chat"></div>
       <div class="composer" id="composer">
-        <div class="suggestions" id="hints"></div>
+        <div class="suggestions" id="hints" dir="ltr"></div>
         <form class="row" id="form">
           <button class="mic" type="button" id="mic">🎤</button>
-          <input id="input" placeholder="Responde en inglés..." autocomplete="off">
+          <input id="input" dir="ltr" placeholder="${tx("Responde en inglés...", "أجب بالإنجليزية...")}" autocomplete="off">
           <button class="btn" type="submit">➤</button>
         </form>
         <div class="mic-status small" id="micStatus"></div>
@@ -45,7 +45,7 @@ App.sections.conversation = {
     function botSay(text, es) {
       const t = fill(text);
       const spoken = t.replace(/\(.*?\)/g, "").trim(); // no leer las indicaciones entre paréntesis
-      chat.appendChild(html(`<div class="bubble bot">${escapeHtml(t)} ${sayBtn(spoken)}<div class="es" ${showEs ? "" : "hidden"}>🇪🇸 ${escapeHtml(es || "")}</div></div>`));
+      chat.appendChild(html(`<div class="bubble bot"><span dir="ltr">${escapeHtml(t)}</span> ${sayBtn(spoken)}<div class="es" ${showEs ? "" : "hidden"}>${NATIVE.flag} ${escapeHtml(es || "")}</div></div>`));
       if (autoVoice) speak(spoken);
       scroll();
     }
@@ -53,18 +53,18 @@ App.sections.conversation = {
       const step = conv.steps[stepId];
       botSay(step.bot, step.es);
       if (step.end) return finish();
-      $("#hints").innerHTML = `<span class="small muted">💡 Ideas:</span>` + (step.hints || []).map((h) => `<button class="chip" type="button">${escapeHtml(h)}</button>`).join("");
+      $("#hints").innerHTML = `<span class="small muted">💡 ${tx("Ideas", "أفكار")}:</span>` + (step.hints || []).map((h) => `<button class="chip" type="button">${escapeHtml(h)}</button>`).join("");
       $$("#hints .chip").forEach((c) => (c.onclick = () => { $("#input").value = c.textContent; $("#input").focus(); }));
     }
     function userSay(text) {
       const step = conv.steps[stepId];
       turns++;
-      chat.appendChild(html(`<div class="bubble me">${escapeHtml(text)}</div>`));
+      chat.appendChild(html(`<div class="bubble me" dir="ltr">${escapeHtml(text)}</div>`));
       // Corrección suave, sin cortar la conversación
       const r = Checker.check(text);
       if (r.issues.length) {
         tips++;
-        chat.appendChild(html(`<div class="bubble tip">✏️ <b>${escapeHtml(r.corrected)}</b> ${sayBtn(r.corrected)}<div class="small">${r.issues.map((i) => i.why).join("<br>")}</div></div>`));
+        chat.appendChild(html(`<div class="bubble tip">✏️ <b dir="ltr">${escapeHtml(r.corrected)}</b> ${sayBtn(r.corrected)}<div class="small">${r.issues.map((i) => i.why).join("<br>")}</div></div>`));
       }
       Store.data.stats.speakTotal++; if (!r.issues.length) Store.data.stats.speakPerfect++;
       markDay(); Store.save();
@@ -91,9 +91,9 @@ App.sections.conversation = {
       chat.appendChild(html(`
         <div class="card-box" style="text-align:center;margin-top:10px">
           <div class="result-big">🎉</div>
-          <b>¡Conversación completada!</b>
-          <p class="muted">${turns} respuestas · ${tips ? `✏️ ${tips} consejo${tips > 1 ? "s" : ""} de corrección` : "✅ ¡sin errores detectados!"}</p>
-          <div class="btn-row"><button class="btn" onclick="render()">🔁 Repetir</button><button class="btn ghost" onclick="go('conversation')">💬 Otra</button></div>
+          <b>${tx("¡Conversación completada!", "اكتملت المحادثة!")}</b>
+          <p class="muted">${tx(`${turns} respuestas`, `${turns} إجابات`)} · ${tips ? tx(`✏️ ${tips} consejo${tips > 1 ? "s" : ""} de corrección`, `✏️ ${tips} نصائح تصحيح`) : tx("✅ ¡sin errores detectados!", "✅ لم تُكتشف أخطاء!")}</p>
+          <div class="btn-row"><button class="btn" onclick="render()">${tx("🔁 Repetir", "🔁 أعد")}</button><button class="btn ghost" onclick="go('conversation')">💬 ${tx("Otra", "محادثة أخرى")}</button></div>
         </div>`));
       scroll();
     }
@@ -105,7 +105,7 @@ App.sections.conversation = {
       $("#input").value = "";
       userSay(v);
     };
-    $("#voiceToggle").onclick = () => { autoVoice = !autoVoice; $("#voiceToggle").style.opacity = autoVoice ? 1 : 0.4; toast(autoVoice ? "🔊 Voz activada" : "🔇 Voz desactivada"); };
+    $("#voiceToggle").onclick = () => { autoVoice = !autoVoice; $("#voiceToggle").style.opacity = autoVoice ? 1 : 0.4; toast(autoVoice ? tx("🔊 Voz activada", "🔊 الصوت مفعّل") : tx("🔇 Voz desactivada", "🔇 الصوت متوقف")); };
     $("#esToggle").onclick = () => { showEs = !showEs; $$(".bubble .es").forEach((e) => (e.hidden = !showEs)); };
 
     // Micrófono
@@ -128,8 +128,8 @@ App.sections.conversation = {
       };
       stopListening(); activeRec = rec;
       speechSynthesis.cancel();
-      mic.classList.add("on"); status.textContent = "🔴 Escuchando...";
-      try { rec.start(); } catch (err) { status.textContent = "No pude iniciar el micrófono 😅"; }
+      mic.classList.add("on"); status.textContent = tx("🔴 Escuchando...", "🔴 أستمع...");
+      try { rec.start(); } catch (err) { status.textContent = tx("No pude iniciar el micrófono 😅", "لم أستطع تشغيل الميكروفون 😅"); }
     };
 
     showStep();

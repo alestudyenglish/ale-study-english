@@ -6,13 +6,13 @@ App.sections.listening = {
     const pct = s.listenTotal ? Math.round((s.listenOk / s.listenTotal) * 100) : 0;
     view.innerHTML = `
       <h1 class="page">👂 Listening</h1>
-      <p class="lead">Escucha con atención. Puedes repetir el audio o ponerlo lento 🐢.</p>
+      <p class="lead">${tx("Escucha con atención. Puedes repetir el audio o ponerlo lento 🐢.", "استمع بانتباه. يمكنك إعادة الصوت أو جعله بطيئًا 🐢.")}</p>
       <div class="card-box row">
-        <div style="flex:1"><b>Tu listening</b><div class="small muted">${s.listenOk} de ${s.listenTotal} correctas</div></div>
+        <div style="flex:1"><b>${tx("Tu listening", "مهارة الاستماع")}</b><div class="small muted">${tx(`${s.listenOk} de ${s.listenTotal} correctas`, `${s.listenOk} من ${s.listenTotal} صحيحة`)}</div></div>
         <div class="ring" style="--p:${pct};width:64px;height:64px" data-label="${pct}%"></div>
       </div>
-      ${listItem("listening/choose", "🔘", "Elegir la respuesta", "Escucha y elige qué frase oíste (más fácil)")}
-      ${listItem("listening/write", "✍️", "Escribir lo que escuché", "Dictado: escribe la frase completa (más difícil)")}`;
+      ${listItem("listening/choose", "🔘", tx("Elegir la respuesta", "اختر الإجابة"), tx("Escucha y elige qué frase oíste (más fácil)", "استمع واختر العبارة التي سمعتها (أسهل)"))}
+      ${listItem("listening/write", "✍️", tx("Escribir lo que escuché", "اكتب ما سمعته"), tx("Dictado: escribe la frase completa (más difícil)", "إملاء: اكتب العبارة كاملة (أصعب)"))}`;
   },
 
   quiz(view, mode) {
@@ -21,8 +21,8 @@ App.sections.listening = {
     const record = (ok) => { Store.data.stats.listenTotal++; if (ok) Store.data.stats.listenOk++; Store.save(); };
 
     const questions = chosen.map((p) => {
-      const after = `<div class="small">🇬🇧 <b>${escapeHtml(p.english)}</b><br>🇪🇸 ${escapeHtml(p.spanish)}</div>
-        <div class="btn-row" style="margin-top:8px">${sayBtn(p.english, "🔊 Otra vez", `data-lang="${langFor(p)}"`)}${sayBtn(p.english, "🐢 Lento", `data-lang="${langFor(p)}" data-slow="1"`)}</div>`;
+      const after = `<div class="small"><span dir="ltr">🇬🇧 <b>${escapeHtml(p.english)}</b></span><br>${NATIVE.flag} ${escapeHtml(p.spanish)}</div>
+        <div class="btn-row" style="margin-top:8px">${sayBtn(p.english, tx("🔊 Otra vez", "🔊 مرة أخرى"), `data-lang="${langFor(p)}"`)}${sayBtn(p.english, tx("🐢 Lento", "🐢 ببطء"), `data-lang="${langFor(p)}" data-slow="1"`)}</div>`;
       if (mode === "choose") {
         // Opciones parecidas en largo para que no sea tan obvio
         const others = shuffle(pool.filter((o) => o !== p))
@@ -30,19 +30,19 @@ App.sections.listening = {
           .slice(0, 3).map((o) => o.english);
         return {
           tag: "👂 Listening", audio: p.english, lang: langFor(p),
-          prompt: "¿Qué frase escuchaste?",
+          prompt: tx("¿Qué frase escuchaste?", "أي عبارة سمعت؟"),
           options: shuffle([p.english, ...others]), answer: p.english,
           explain: after, onResult: record,
         };
       }
       return {
-        tag: "✍️ Dictado", audio: p.english, lang: langFor(p),
-        prompt: "Escribe lo que escuchaste",
-        sub: "No importan las mayúsculas ni los signos.",
+        tag: tx("✍️ Dictado", "✍️ إملاء"), audio: p.english, lang: langFor(p),
+        prompt: tx("Escribe lo que escuchaste", "اكتب ما سمعته"),
+        sub: tx("No importan las mayúsculas ni los signos.", "لا تهمّ الأحرف الكبيرة ولا علامات الترقيم."),
         check: (input) => {
           const d = wordDiff(p.english, input);
           const ok = d.score >= 0.85;
-          return { ok, html: `<div>${d.html}</div><div class="small muted">Acertaste ${Math.round(d.score * 100)}% de las palabras</div>${after}` };
+          return { ok, html: `<div dir="ltr">${d.html}</div><div class="small muted">${tx(`Acertaste ${Math.round(d.score * 100)}% de las palabras`, `أصبت ${Math.round(d.score * 100)}% من الكلمات`)}</div>${after}` };
         },
         onResult: record,
       };

@@ -68,8 +68,8 @@ button { font-family: inherit; }
   max-width: 640px; margin: 0 auto; padding: 12px 16px;
   display: flex; align-items: center; gap: 8px;
 }
-.logo { font-weight: 800; font-size: 1.15rem; margin-right: auto; cursor: pointer; line-height: 1.15; }
-.logo small { display: block; font-size: 0.72rem; font-weight: 700; color: var(--accent); padding-left: 1.6em; letter-spacing: 0.3px; }
+.logo { font-weight: 800; font-size: 1.15rem; margin-inline-end: auto; cursor: pointer; line-height: 1.15; }
+.logo small { display: block; font-size: 0.72rem; font-weight: 700; color: var(--accent); padding-inline-start: 1.6em; letter-spacing: 0.3px; }
 .pill {
   border: none; background: var(--card); color: var(--text); box-shadow: var(--shadow);
   border-radius: 999px; padding: 8px 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
@@ -170,7 +170,7 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 .path a { text-decoration: none; color: var(--text); background: var(--card); box-shadow: var(--shadow); border-radius: 14px; padding: 8px 10px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tile {
-  border: none; text-align: left; background: var(--card); color: var(--text); box-shadow: var(--shadow);
+  border: none; text-align: start; background: var(--card); color: var(--text); box-shadow: var(--shadow);
   border-radius: 20px; padding: 16px; cursor: pointer; min-height: 104px; display: flex; flex-direction: column; gap: 4px;
 }
 .tile .ico { font-size: 1.8rem; }
@@ -194,8 +194,8 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 .big { font-size: 1.7rem; font-weight: 800; line-height: 1.3; }
 .example { margin-top: 14px; color: var(--muted); font-style: italic; }
 .hint { position: absolute; bottom: 14px; font-size: 0.8rem; color: var(--muted); }
-.badge { position: absolute; top: 14px; right: 16px; font-size: 1.2rem; }
-.badge-left { position: absolute; top: 14px; left: 16px; }
+.badge { position: absolute; top: 14px; inset-inline-end: 16px; font-size: 1.2rem; }
+.badge-left { position: absolute; top: 14px; inset-inline-start: 16px; }
 .face .btn-row { margin-top: 16px; justify-content: center; }
 .face .btn-row .icon-btn { height: 44px; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -208,17 +208,17 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 
 /* ---------- Verbos ---------- */
 .filters { display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap; align-items: center; }
-.result-count { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+.result-count { color: var(--muted); font-size: 0.85rem; margin-inline-start: auto; }
 .verb { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
 .verb-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; }
 .verb-title { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.3px; }
 .verb-title .es { color: var(--muted); font-weight: 600; font-size: 1rem; }
-.verb-tags { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.verb-tags { margin-inline-start: auto; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .match-note { background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 6px 10px; font-size: 0.82rem; font-weight: 600; margin-bottom: 10px; }
 .forms { display: flex; flex-direction: column; gap: 6px; }
 .form-row {
   display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px;
-  background: var(--bg); border-left: 5px solid var(--c);
+  background: var(--bg); border-inline-start: 5px solid var(--c);
 }
 .form-row .fname { width: 104px; flex-shrink: 0; white-space: nowrap; font-size: 0.72rem; font-weight: 800; color: var(--c); text-transform: uppercase; letter-spacing: 0.3px; }
 .form-row .fval { font-weight: 700; font-size: 1.02rem; flex: 1; }
@@ -247,13 +247,13 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
   .logo { font-size: 0.86rem; }
 }
 /* En celulares muy chicos, la racha se ve en Inicio y Progreso: se oculta arriba para que quepa el nombre */
-@media (max-width: 370px) {
+@media (max-width: 440px) {
   #streakBtn { display: none; }
 }
 .c-pres { --c: var(--pres); } .c-past { --c: var(--past); } .c-pp { --c: var(--pp); } .c-fut { --c: var(--fut); } .c-ger { --c: var(--ger); }
 .verb-actions { display: flex; gap: 8px; margin-top: 12px; }
 .verb-actions .btn { flex: 1; padding: 11px; font-size: 0.92rem; }
-.ex { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--bg); border-left: 5px solid var(--c); margin-bottom: 8px; }
+.ex { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--bg); border-inline-start: 5px solid var(--c); margin-bottom: 8px; }
 .ex .en { font-weight: 600; }
 .ex .en b { color: var(--c); }
 .ex .es { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
@@ -279,7 +279,7 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 .options { display: grid; gap: 10px; margin-bottom: 12px; }
 .option {
   border: 2px solid var(--accent-soft); background: var(--bg); color: var(--text); border-radius: 14px;
-  padding: 14px; font-size: 1.02rem; font-weight: 600; cursor: pointer; text-align: left;
+  padding: 14px; font-size: 1.02rem; font-weight: 600; cursor: pointer; text-align: start;
 }
 .option.correct { border-color: var(--good); background: var(--good-soft); }
 .option.wrong { border-color: var(--bad); background: var(--bad-soft); }
@@ -314,11 +314,11 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 /* ---------- Conversación (chat) ---------- */
 .chat { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 14px; }
 .bubble { max-width: 85%; padding: 12px 14px; border-radius: 18px; line-height: 1.4; }
-.bubble.bot { background: var(--card); box-shadow: var(--shadow); align-self: flex-start; border-bottom-left-radius: 6px; }
-.bubble.me { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; }
+.bubble.bot { background: var(--card); box-shadow: var(--shadow); align-self: flex-start; border-end-start-radius: 6px; }
+.bubble.me { background: var(--accent); color: #fff; align-self: flex-end; border-end-end-radius: 6px; }
 .bubble.tip { background: var(--warn-soft); align-self: flex-end; font-size: 0.88rem; border-radius: 14px; }
 .bubble .es { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-.bubble .icon-btn { min-width: 30px; height: 30px; padding: 0; font-size: 0.8rem; margin-left: 6px; vertical-align: middle; }
+.bubble .icon-btn { min-width: 30px; height: 30px; padding: 0; font-size: 0.8rem; margin-inline-start: 6px; vertical-align: middle; }
 .suggestions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .suggestions .chip { font-size: 0.82rem; box-shadow: none; background: var(--accent-soft); color: var(--accent); }
 .composer { position: sticky; bottom: 76px; background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 12px; }
@@ -329,7 +329,7 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 /* ---------- Listas (temas, lecciones, escenarios) ---------- */
 .list-item {
   display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 18px; box-shadow: var(--shadow);
-  padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border: none; width: 100%; text-align: left; color: var(--text);
+  padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border: none; width: 100%; text-align: start; color: var(--text);
 }
 .list-item .ico { font-size: 1.8rem; }
 .list-item .txt { flex: 1; }
@@ -389,6 +389,13 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
 .story p { margin: 10px 0; line-height: 1.5; }
 .story p b { color: var(--past); }
 .story .icon-btn { min-width: 30px; height: 30px; padding: 0; font-size: 0.8rem; vertical-align: middle; }
+
+/* ---------- 🇸🇦 Árabe (de derecha a izquierda) ---------- */
+[dir="rtl"] body { font-family: "Segoe UI", "Noto Sans Arabic", Tahoma, system-ui, sans-serif; }
+[dir="rtl"] .lead, [dir="rtl"] .explain, [dir="rtl"] .es, [dir="rtl"] .why { line-height: 1.7; }
+/* El inglés dentro de textos en árabe se mantiene de izquierda a derecha */
+[dir="rtl"] [dir="ltr"] { unicode-bidi: isolate; }
+#langBtn { font-size: 1.05rem; padding: 6px 9px; }
 
 /* ---------- Progreso ---------- */
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
