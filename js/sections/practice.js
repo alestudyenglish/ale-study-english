@@ -10,6 +10,8 @@ App.sections.practice = {
       <h1 class="page">🎯 ${tx("Practicar", "تدرّب")}</h1>
       <p class="lead">${tx("Elige cómo quieres practicar hoy.", "اختر كيف تريد أن تتدرّب اليوم.")}</p>
       ${listItem("tutor", "🗣️", tx("Hablar con Alexis", "تحدّث مع Alexis"), tx("Conversación libre con IA, en inglés y español", "محادثة حرّة مع الذكاء الاصطناعي بالإنجليزية والعربية"))}
+      ${listItem("topics", "🎯", tx("Temas de clase", "مواضيع الصف"), tx("Conditionals, Can/Could, noticias, ago/last/in, a/an/the · con pronunciación", "Conditionals وCan/Could والأخبار وago/last/in وa/an/the · مع النطق"))}
+      ${listItem("paul", "🔧", "Paul the Mechanic", tx("Inglés de taller: partes, herramientas, electricidad, clientes", "إنجليزية الورشة: الأجزاء، الأدوات، الكهرباء، الزبائن"))}
       ${listItem("past", "⏪", "Past Simple", tx("Cómo funciona el pasado + 5 juegos", "كيف يعمل الماضي + 5 ألعاب"))}
       ${listItem("games", "🎲", tx("Juegos de clase", "ألعاب الصف"), tx("Do/Go/Play, preguntas sí/no, ruleta y he/she/it", "Do/Go/Play، أسئلة نعم/لا، العجلة وhe/she/it"))}
       ${listItem("practice/review", "🔁", tx("Repaso rápido", "مراجعة سريعة"), tx("Mezcla de verbos y frases que te cuestan", "مزيج من الأفعال والعبارات الصعبة عليك"))}

@@ -46,6 +46,8 @@ App.sections.home = {
 
       <div class="section-title">📚 ${tx("Secciones", "الأقسام")}</div>
       <div class="tiles">
+        ${tile("topics", "🎯", tx("Temas de clase", "مواضيع الصف"), tx("Gramática + pronunciación", "القواعد + النطق"))}
+        ${tile("paul", "🔧", "Paul the Mechanic", tx("Inglés para el taller", "الإنجليزية للورشة"))}
         ${tile("phrases", "🃏", tx("Frases", "عبارات"), tx("Situaciones reales", "مواقف حقيقية"))}
         ${tile("verbs", "📚", tx("Verbos", "الأفعال"), tx("Buscar y entender", "ابحث وافهم"))}
         ${tile("practice/verbs", "🧠", tx("Practicar verbos", "تدرّب على الأفعال"), tx("Ejercicios con corrección", "تمارين مع تصحيح"))}

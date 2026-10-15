@@ -10,7 +10,7 @@ const NAV = [
   ["progress", "📊", tx("Progreso", "تقدّمي")],
 ];
 // Secciones que "pertenecen" a la pestaña Practicar
-const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor", "games", "past"];
+const PRACTICE_CHILDREN = ["listening", "speaking", "conversation", "tutor", "games", "past", "topics", "paul"];
 
 function render() {
   if (App.cleanup) { App.cleanup(); App.cleanup = null; }

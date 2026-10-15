@@ -228,7 +228,7 @@ function speak(text, opts = {}) {
     const u = new SpeechSynthesisUtterance(part);
     u.lang = voice ? voice.lang : lang;
     if (voice) u.voice = voice;
-    u.rate = voiceRate(opts.slow);
+    u.rate = opts.rate || voiceRate(opts.slow);
     u.pitch = 1;
     return u;
   });
@@ -356,7 +356,7 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-say]");
   if (!b) return;
   e.stopPropagation();
-  speak(b.dataset.say, { lang: b.dataset.lang, slow: b.dataset.slow === "1" });
+  speak(b.dataset.say, { lang: b.dataset.lang, slow: b.dataset.slow === "1", rate: Number(b.dataset.rate) || undefined });
 });
 const sayBtn = (text, label = "🔊", extra = "") =>
   `<button class="icon-btn" type="button" data-say="${escapeHtml(text)}" ${extra} title="${tx("Escuchar", "استمع")}">${label}</button>`;

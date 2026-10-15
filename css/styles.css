@@ -383,6 +383,19 @@ h1.page { font-size: 1.5rem; margin: 8px 0 4px; }
   display: flex; flex-direction: column; align-items: center; gap: 2px; border-bottom: 3px solid var(--past);
 }
 .irr b { color: var(--past); font-size: 1.05rem; }
+/* 🎯 Temas y 🔧 Paul: ritmo de la frase (negrita = fuerte, gris = débil) */
+.stress b { font-weight: 800; }
+.weak { opacity: 0.55; font-weight: 500; }
+.ex:has(.stress) { flex-wrap: wrap; }
+.ex:has(.stress) .text { min-width: 200px; }
+.vocab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
+.vocab-grid .irr { border-bottom-color: var(--accent); }
+.vocab-grid .irr b { color: var(--accent); font-size: 0.98rem; }
+.vocab-grid .irr small { font-size: 0.78rem; text-align: center; }
+.why-box { border-inline-start: 5px solid var(--accent); }
+.how-to { background: var(--accent-soft); }
+.paul-intro .paul-face { font-size: 2.6rem; }
+.big-play { box-shadow: 0 0 0 4px var(--accent-soft); }
 .irr small { color: var(--muted); font-size: 0.72rem; }
 .story { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 4px 16px; margin-bottom: 14px; }
 .story:empty { display: none; }
